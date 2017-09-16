@@ -36,6 +36,7 @@ let homeworkContainer = document.querySelector('#homework-container');
  * @return {Promise<Array<{name: string}>>}
  */
 function loadTowns() {
+    return require('./index').loadAndSortTowns();
 }
 
 /**
@@ -52,15 +53,58 @@ function loadTowns() {
  * @return {boolean}
  */
 function isMatching(full, chunk) {
+    return (full.toLowerCase().indexOf(chunk.toLowerCase()) != -1);
 }
 
 let loadingBlock = homeworkContainer.querySelector('#loading-block');
 let filterBlock = homeworkContainer.querySelector('#filter-block');
 let filterInput = homeworkContainer.querySelector('#filter-input');
 let filterResult = homeworkContainer.querySelector('#filter-result');
-let townsPromise;
+// let townsPromise;
+let cities = [];
+let errorBlock = document.createElement('div');
+let txtDiv = document.createElement('div');
+let reloadBtn = document.createElement('button');
+let funcSuccess = data => {
+    filterBlock.style.display = 'block';
+    loadingBlock.style.display = 'none';
+    errorBlock.style.display = 'none';
+    cities = data;
+}
+let funcErr = () => {
+    errorBlock.style.display = 'block';
+    loadingBlock.style.display = 'none';
+}
 
-filterInput.addEventListener('keyup', function() {
+errorBlock.style.display = 'none';
+txtDiv.textContent = 'Не удалось загрузить города';
+reloadBtn.textContent = 'Повторить';
+errorBlock.appendChild(txtDiv);
+errorBlock.appendChild(reloadBtn);
+homeworkContainer.appendChild(errorBlock);
+
+loadTowns().then(funcSuccess, funcErr);
+
+filterInput.addEventListener('keyup', () => {
+    let inputStr = filterInput.value.trim();
+    let filteredList = [];
+
+    while (filterResult.lastChild) {
+        filterResult.removeChild(filterResult.lastChild);
+    }
+    if (inputStr) {
+        filteredList = cities.filter(item => isMatching(item.name, inputStr));
+        for (let i = 0; i < filteredList.length; i++) {
+            let div = document.createElement('div');
+
+            div.textContent = filteredList[i].name;
+            filterResult.appendChild(div);
+        }
+    }
+});
+
+reloadBtn.addEventListener('click', () => {
+    loadTowns().then(funcSuccess, funcErr);
 });
 
 export {
