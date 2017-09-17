@@ -38,9 +38,76 @@ let addNameInput = homeworkContainer.querySelector('#add-name-input');
 let addValueInput = homeworkContainer.querySelector('#add-value-input');
 let addButton = homeworkContainer.querySelector('#add-button');
 let listTable = homeworkContainer.querySelector('#list-table tbody');
+let cookieModule = require('./index');
+
+function isMatching(full, chunk) {
+    return (full.name.toLowerCase().indexOf(chunk.toLowerCase()) != -1 ||
+        full.value.toLowerCase().indexOf(chunk.toLowerCase()) != -1);
+}
+
+function refresh() {
+    while (listTable.lastChild) {
+        listTable.removeChild(listTable.lastChild);
+    }
+    let cookiesArr = [];
+
+    if (document.cookie) {
+        let cookies = document.cookie.split('; ');
+
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].split('=');
+
+            cookiesArr.push({
+                name: cookie[0],
+                value: cookie[1]
+            });
+        }
+        let filterValue = filterNameInput.value;
+
+        cookiesArr = cookiesArr.filter(item => isMatching(item, filterValue));
+        for (let i = 0; i < cookiesArr.length; i++) {
+            let tr = document.createElement('tr');
+            let nameTd = document.createElement('td');
+            let valueTd = document.createElement('td');
+            let btnTd = document.createElement('td');
+            let deleteBtn = document.createElement('button');
+
+            nameTd.textContent = cookiesArr[i].name;
+            valueTd.textContent = cookiesArr[i].value;
+            deleteBtn.name = cookiesArr[i].name;
+            deleteBtn.textContent = 'Удалить';
+            btnTd. appendChild(deleteBtn);
+            tr.appendChild(nameTd);
+            tr.appendChild(valueTd);
+            tr.appendChild(btnTd);
+            listTable.appendChild(tr);
+        }
+    }
+
+}
 
 filterNameInput.addEventListener('keyup', function() {
+    refresh();
 });
 
 addButton.addEventListener('click', () => {
+    let name = addNameInput.value;
+    let value = addValueInput.value;
+
+    if (name) {
+        cookieModule.createCookie(name, value);
+        refresh();
+    }
 });
+
+listTable.addEventListener('click', (event) => {
+    let target = event.target;
+
+    if (target.tagName == 'BUTTON') {
+        let name = target.name;
+
+        cookieModule.deleteCookie(name);
+        target.parentElement.parentElement.remove();
+    }
+});
+
